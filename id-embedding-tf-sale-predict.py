@@ -53,6 +53,7 @@ class MyGenerator:
             #print len(self.datas)
             if(self.start>len(self.datas)):
                 self.start=self.start%len(self.datas)
+                continue
 
             id_inputs = self.id_features[self.start:self.start+self.step]
             inputs = self.features[self.start:self.start+self.step]
@@ -121,6 +122,8 @@ for step in range(15000):
     id_x,x,y = train_data_gen.get_next(step)
     #print sess.run(tf.shape(id_x))
     id_trans = tf.transpose(id_x)
+    if(len(id_x )<batch_size-1):
+        continue
     #print tf.shape(id_trans)
     poiid= sess.run(tf.reshape( tf.transpose(id_trans[0]), [batch_size,1]) )
     #print "poiid shape",sess.run(tf.shape(poiid))
