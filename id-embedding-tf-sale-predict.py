@@ -53,6 +53,7 @@ class MyGenerator:
             #print len(self.datas)
             if(self.start>len(self.datas)):
                 self.start=self.start%len(self.datas)
+                continue
 
             id_inputs = self.id_features[self.start:self.start+self.step]
             inputs = self.features[self.start:self.start+self.step]
@@ -124,6 +125,8 @@ writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
 for step in range(100):
     id_x,x,y = train_data_gen.get_next(step)
     id_trans = tf.transpose(id_x)
+    if(len(id_x )<batch_size-1):
+        continue
     #print tf.shape(id_trans)
     poiid , skuid, cateid = sess.run([tf.reshape( tf.transpose(id_trans[0]), [batch_size,1]), tf.reshape( tf.transpose(id_trans[1]), [batch_size,1]) , tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] )] )
     #skuid= sess.run(tf.reshape( tf.transpose(id_trans[1]), [batch_size,1] ))
