@@ -74,34 +74,37 @@ tf_y = tf.placeholder(tf.float32, [None,1])     # input
 #id input
 poitotalLength = 100
 poiid_embedding_size = 3
-poiid_embedding = tf.Variable(tf.random_uniform([poitotalLength, poiid_embedding_size],-1.0,1.0))
+#poiid_embedding = tf.Variable(tf.random_uniform([poitotalLength, poiid_embedding_size],-1.0,1.0))
+poiid_embedding = tf.Variable(tf.zeros([poitotalLength, poiid_embedding_size]))
 poiid_x = tf.placeholder(tf.int64,[None,1])
 
 skutotalLength = 60000
 sku_embedding_size = 5
 sku_embedding = tf.Variable(tf.random_uniform([skutotalLength, sku_embedding_size],-1.0,1.0))
+sku_embedding = tf.Variable(tf.zeros([skutotalLength, sku_embedding_size]))
 skuid_x = tf.placeholder(tf.int64,[None,1])
 
 catetotalLength = 5000
 cate_embedding_size = 5
 cate_embedding = tf.Variable(tf.random_uniform([catetotalLength, cate_embedding_size],-1.0,1.0))
-cateid_x = tf.placeholder(tf.int64,[None,1])
+cate_embedding = tf.Variable(tf.zeros([catetotalLength, cate_embedding_size]))
+cateid_x = tf.placeholder(tf.int64,[None,1],name='cate_x')
 
-poi_embed = tf.nn.embedding_lookup(poiid_embedding, poiid_x); 
-sku_embed = tf.nn.embedding_lookup(sku_embedding, skuid_x);
-cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x);
+poi_embed = tf.nn.embedding_lookup(poiid_embedding, poiid_x, name='poi_emb'); 
+sku_embed = tf.nn.embedding_lookup(sku_embedding, skuid_x, name='sku_emb');
+cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x,name='cate_emb');
 
 
 
 
 # neural network layers
-l1 = tf.layers.dense(tf_x, 20)          # hidden layer
-l2_emb1 = tf.concat([poi_embed, sku_embed],-1)
-l2_emb2 = tf.concat([l2_emb1, cate_embed],-1)
-l2_emb2 = tf.reshape(l2_emb2,[batch_size,13])
-l2_emb3 = tf.concat([l1, l2_emb2],-1)
-l3 = tf.layers.dense(l2_emb3, 10)
-output = tf.layers.dense(l3, 1)                     # output layer
+l1 = tf.layers.dense(tf_x, 20,name="l1_hidden")          # hidden layer
+l2_emb1 = tf.concat([poi_embed, sku_embed],-1,name='l2_emb1')
+l2_emb2 = tf.concat([l2_emb1, cate_embed],-1,name='l2_emb2')
+l2_emb2 = tf.reshape(l2_emb2,[batch_size,13],name='l2_emb2_new')
+l2_emb3 = tf.concat([l1, l2_emb2],-1,name='l2_emb3')
+l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
+output = tf.layers.dense(l3, 1, name='output')                     # output layer
 
 #loss = tf.losses.mean_squared_error(tf_y, output)   # compute cost
 #loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
@@ -116,35 +119,44 @@ train_op = optimizer.minimize(loss)
 sess = tf.Session()                                 # control training and others
 sess.run(tf.global_variables_initializer())         # initialize var in graph
 
+writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
 
-for step in range(15000):
+for step in range(100):
     id_x,x,y = train_data_gen.get_next(step)
-    #print sess.run(tf.shape(id_x))
     id_trans = tf.transpose(id_x)
     #print tf.shape(id_trans)
-    poiid= sess.run(tf.reshape( tf.transpose(id_trans[0]), [batch_size,1]) )
-    #print "poiid shape",sess.run(tf.shape(poiid))
-    skuid= sess.run(tf.reshape( tf.transpose(id_trans[1]), [batch_size,1] ))
-    cateid= sess.run(tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] ))
-    #print poiid
-    #poiid = sess.run(tf.reshape(poiid,[batch_size,1]))
-    #print "poiid shape2",sess.run(tf.shape(poiid))
-    #skuid = sess.run(tf.reshape(skuid,[batch_size,1]))
-    #cateid = sess.run(tf.reshape(cateid,[batch_size,1]))
-    #print poiid
-    #x = tf.reshape(x,[batch_size,13])
-    #y = tf.reshape(y,[batch_size,1])
+    poiid , skuid, cateid = sess.run([tf.reshape( tf.transpose(id_trans[0]), [batch_size,1]), tf.reshape( tf.transpose(id_trans[1]), [batch_size,1]) , tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] )] )
+    #skuid= sess.run(tf.reshape( tf.transpose(id_trans[1]), [batch_size,1] ))
+    #cateid= sess.run(tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] ))
     # train and net output
-    _, l, pred = sess.run([train_op, loss, output],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
+    _, l, pred,poiemb,skuemb,cateemb = sess.run([train_op, loss, output,poiid_embedding,sku_embedding,cate_embedding],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
     if step % 10 == 0:
         print('loss is: ' + str(l))
         print('prediction is:' + str(pred[0:10]))
         print('label is:' + str(y[0:10]))
-        print sess.run(poiid_embedding[46])
-        print sess.run(poiid_embedding[66])
-        print sess.run(poiid_embedding[56])
-        print sess.run(poiid_embedding[63])
-        print sess.run(poiid_embedding[3])
+    if step %100 ==0:
+        f=open('poiid_embedding.txt','w+') 
+        for i in range(1,100):
+           if(poiemb[i][0]>0):
+               outstr = str(i)+"\t"+str(poiemb[i])
+               f.write(outstr+"\n") 
+        f=open('sku_embedding.txt','w+')
+        for i in range(1,60000):
+           if(skuemb[i][0]>0):
+               outstr = str(i)+"\t"+str(skuemb[i])
+               f.write(outstr+"\n")
+        f=open('cate_embedding.txt','w+')
+        for k in range(1,500):
+           if(cateemb[k][0]>0):
+               outstr = str(k)+"\t"+str(cateemb[k])
+               f.write(outstr+"\n")
+        #print sess.run(poiid_embedding[46])
+        #print sess.run(poiid_embedding[66])
+        #print sess.run(poiid_embedding[56])
+        #print sess.run(poiid_embedding[63])
+        #print sess.run(poiid_embedding[3])
+
+writer.close()
 
 #output_pred = sess.run(output,{tf_x:x_pred})
 #print('input is:' + str(x_pred[0][:]))
