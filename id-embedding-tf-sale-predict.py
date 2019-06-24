@@ -2,20 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 class MyGenerator:
-    def __init__(self, start, step ,filename):
-        self.start = start
-        self.filename = filename
-        self.step = step
-        self.datas = []
-        for line in open(filename):
-            line = line.strip()
-            self.datas.append(line)
-    
     def getSaleData(self,data):
         features = []
         for i in range(3,16):
             features.append(data[i]) 
-	return features
+        return features    
      
     def getIdData(self,data):
         id_features = []
@@ -27,7 +18,6 @@ class MyGenerator:
         id_features.append(skuid)
         id_features.append(cateid) 
 	return id_features
-    
 
     def getLabelData(self,data):
         labels = []
@@ -35,17 +25,28 @@ class MyGenerator:
             labels.append(data[19])
         return labels
         
-    def getFeature(self,datas):
-        id_feature = []
-        feature = []
-        label = []
-        for data in datas:
-            dts = data.split("\t")
-            id_feature.append(self.getIdData(dts))
-            feature.append(self.getSaleData(dts))
-            label.append(self.getLabelData(dts))
-        return id_feature,feature,label
 
+    def __init__(self, start, step ,filename):
+        self.start = start
+        self.filename = filename
+        self.step = step
+        self.datas = []
+        self.id_features = []
+        self.features = []
+        self.labels = []
+        self.label_max =-1
+        self.label_min =10000
+        i = 0
+        for line in open(filename):
+            line = line.strip()
+            cols = line.split('\t')
+            self.features.append(self.getSaleData(cols))
+            self.id_features.append(self.getIdData(cols))
+            self.labels.append(self.getLabelData(cols)) 
+            self.datas.append(line)
+        #self.label_max = np.max(np.array(self.labels.ravel()))
+        #self.label_min = np.min(np.array(self.labels))
+         
 
     def get_next(self,start):
         while True:
@@ -53,7 +54,9 @@ class MyGenerator:
             if(self.start>len(self.datas)):
                 self.start=self.start%len(self.datas)
 
-            id_inputs,inputs,outputs = self.getFeature(self.datas[self.start:self.start+self.step])
+            id_inputs = self.id_features[self.start:self.start+self.step]
+            inputs = self.features[self.start:self.start+self.step]
+            outputs = self.labels[self.start:self.start+self.step]
      
             #print "start=",self.start
             #print "input=",inputs
@@ -92,17 +95,22 @@ cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x);
 
 
 # neural network layers
-l1 = tf.layers.dense(tf_x, 20, tf.nn.tanh)          # hidden layer
+l1 = tf.layers.dense(tf_x, 20)          # hidden layer
 l2_emb1 = tf.concat([poi_embed, sku_embed],-1)
 l2_emb2 = tf.concat([l2_emb1, cate_embed],-1)
 l2_emb2 = tf.reshape(l2_emb2,[batch_size,13])
 l2_emb3 = tf.concat([l1, l2_emb2],-1)
-l3 = tf.layers.dense(l2_emb3, 10, tf.nn.tanh)
+l3 = tf.layers.dense(l2_emb3, 10)
 output = tf.layers.dense(l3, 1)                     # output layer
 
 #loss = tf.losses.mean_squared_error(tf_y, output)   # compute cost
-loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+#loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
+
+loss = tf.reduce_mean(tf.where(
+        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
+        ))
+#optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
+optimizer = tf.train.RMSPropOptimizer(learning_rate=0.001)
 train_op = optimizer.minimize(loss)
 
 sess = tf.Session()                                 # control training and others
@@ -130,7 +138,8 @@ for step in range(15000):
     _, l, pred = sess.run([train_op, loss, output],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
     if step % 10 == 0:
         print('loss is: ' + str(l))
-        #print('prediction is:' + str(pred))
+        print('prediction is:' + str(pred[0:10]))
+        print('label is:' + str(y[0:10]))
         print sess.run(poiid_embedding[46])
         print sess.run(poiid_embedding[66])
         print sess.run(poiid_embedding[56])
