@@ -1,11 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-x = [[80,3,50],[90,8,70],[180,20,120],[140,16,90]]
-y = [[11],[12.5],[20],[18]]
-# y = [11,12.5,20,18]
-x_pred = [[120,5,85]]
-
 class MyGenerator:
     def __init__(self, start, step ,filename):
         self.start = start
