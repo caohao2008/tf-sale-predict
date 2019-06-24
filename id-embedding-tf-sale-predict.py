@@ -122,7 +122,7 @@ sess.run(tf.global_variables_initializer())         # initialize var in graph
 
 writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
 
-for step in range(100):
+for step in range(1500):
     id_x,x,y = train_data_gen.get_next(step)
     id_trans = tf.transpose(id_x)
     if(len(id_x )<batch_size-1):
