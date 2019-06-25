@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import math
 
 class MyGenerator:
     def getSaleData(self,data):
@@ -67,7 +68,9 @@ class MyGenerator:
             return id_inputs,inputs,outputs
 
 batch_size=2000
+eval_batch_size = 50000
 train_data_gen = MyGenerator(0,batch_size,"data/train.data.txt")
+eval_data_gen = MyGenerator(0,eval_batch_size,"data/test.data.txt")
 
 tf_x = tf.placeholder(tf.float32, [None,13])     # input x
 tf_y = tf.placeholder(tf.float32, [None,1])     # input
@@ -99,6 +102,14 @@ cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x,name='cate_emb');
 
 
 # neural network layers
+l2_emb1 = tf.concat([poi_embed, sku_embed],-1,name='l2_emb1')
+l2_emb2 = tf.concat([l2_emb1, cate_embed],-1,name='l2_emb2')
+l2_emb3 = tf.reshape(l2_emb2,[-1,8],name='l2_emb2_new')
+l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
+output = tf.layers.dense(l3, 1, name='output')                     # output layer
+
+
+'''
 l1 = tf.layers.dense(tf_x, 20,name="l1_hidden")          # hidden layer
 l2_emb1 = tf.concat([poi_embed, sku_embed],-1,name='l2_emb1')
 l2_emb2 = tf.concat([l2_emb1, cate_embed],-1,name='l2_emb2')
@@ -106,7 +117,7 @@ l2_emb2 = tf.reshape(l2_emb2,[batch_size,13],name='l2_emb2_new')
 l2_emb3 = tf.concat([l1, l2_emb2],-1,name='l2_emb3')
 l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
-
+'''
 #loss = tf.losses.mean_squared_error(tf_y, output)   # compute cost
 loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
 
@@ -114,7 +125,7 @@ loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
 #        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
 #        ))
 #optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
-optimizer = tf.train.RMSPropOptimizer(learning_rate=0.001)
+optimizer = tf.train.RMSPropOptimizer(learning_rate=0.01)
 train_op = optimizer.minimize(loss)
 
 sess = tf.Session()                                 # control training and others
@@ -140,19 +151,29 @@ for step in range(1500):
     if step %100 ==0:
         f=open('poiid_embedding.txt','w+') 
         for i in range(1,100):
-           if(poiemb[i][0]>0):
+           if(abs(poiemb[i][0])>1e-5):
                outstr = str(i)+"\t"+str(poiemb[i])
                f.write(outstr+"\n") 
         f=open('sku_embedding.txt','w+')
         for i in range(1,60000):
-           if(skuemb[i][0]>0):
+           if(abs(skuemb[i][0])>1e-5):
                outstr = str(i)+"\t"+str(skuemb[i])
                f.write(outstr+"\n")
         f=open('cate_embedding.txt','w+')
         for k in range(1,500):
-           if(cateemb[k][0]>0):
+           if(abs(cateemb[k][0])>1e-5):
                outstr = str(k)+"\t"+str(cateemb[k])
                f.write(outstr+"\n")
+
+        eval_id_x,test_x,test_y = eval_data_gen.get_next(0)
+        id_trans = tf.transpose(eval_id_x)
+        test_poiid , test_skuid, test_cateid = sess.run([tf.reshape( tf.transpose(id_trans[0]), [eval_batch_size,1]), tf.reshape( tf.transpose(id_trans[1]), [eval_batch_size,1]) , tf.reshape( tf.transpose(id_trans[2]), [eval_batch_size,1] )] )
+ 
+        evall, eval_out = sess.run([loss,output],{tf_x:test_x,tf_y:test_y,poiid_x:test_poiid,skuid_x:test_skuid,cateid_x:test_cateid})
+        print "Performance on test data : ",evall
+        print('eval prediction is:' + str(eval_out[0:10]))
+        print('eval label is:' + str(test_y[0:10]))
+
         #print sess.run(poiid_embedding[46])
         #print sess.run(poiid_embedding[66])
         #print sess.run(poiid_embedding[56])
