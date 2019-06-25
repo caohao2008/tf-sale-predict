@@ -132,6 +132,7 @@ sess = tf.Session()                                 # control training and other
 sess.run(tf.global_variables_initializer())         # initialize var in graph
 
 writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
+saver = tf.train.Saver()  
 
 for step in range(1500):
     id_x,x,y = train_data_gen.get_next(step)
@@ -179,6 +180,7 @@ for step in range(1500):
         #print sess.run(poiid_embedding[56])
         #print sess.run(poiid_embedding[63])
         #print sess.run(poiid_embedding[3])
+	saver.save(sess, "graphs/model.ckpt", step)
 
 writer.close()
 
