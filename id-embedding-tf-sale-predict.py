@@ -74,19 +74,19 @@ tf_y = tf.placeholder(tf.float32, [None,1])     # input
 
 #id input
 poitotalLength = 100
-poiid_embedding_size = 3
+poiid_embedding_size = 2
 #poiid_embedding = tf.Variable(tf.random_uniform([poitotalLength, poiid_embedding_size],-1.0,1.0))
 poiid_embedding = tf.Variable(tf.zeros([poitotalLength, poiid_embedding_size]))
 poiid_x = tf.placeholder(tf.int64,[None,1])
 
 skutotalLength = 60000
-sku_embedding_size = 5
+sku_embedding_size = 3
 sku_embedding = tf.Variable(tf.random_uniform([skutotalLength, sku_embedding_size],-1.0,1.0))
 sku_embedding = tf.Variable(tf.zeros([skutotalLength, sku_embedding_size]))
 skuid_x = tf.placeholder(tf.int64,[None,1])
 
 catetotalLength = 5000
-cate_embedding_size = 5
+cate_embedding_size = 3
 cate_embedding = tf.Variable(tf.random_uniform([catetotalLength, cate_embedding_size],-1.0,1.0))
 cate_embedding = tf.Variable(tf.zeros([catetotalLength, cate_embedding_size]))
 cateid_x = tf.placeholder(tf.int64,[None,1],name='cate_x')
@@ -108,11 +108,11 @@ l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
 
 #loss = tf.losses.mean_squared_error(tf_y, output)   # compute cost
-#loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
+loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
 
-loss = tf.reduce_mean(tf.where(
-        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
-        ))
+#loss = tf.reduce_mean(tf.where(
+#        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
+#        ))
 #optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
 optimizer = tf.train.RMSPropOptimizer(learning_rate=0.001)
 train_op = optimizer.minimize(loss)
