@@ -13,7 +13,7 @@ for line in open("sku_embedding.txt"):
         for str in emb:
             if str!='':
                 emb_list.append(float(str))
-        if(len(emb_list)>=5):
+        if(len(emb_list)>=3):
             emb_map[id]=emb_list
             #print id,emb_list
 
