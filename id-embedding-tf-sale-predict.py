@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 import math
 
+
+
 class MyGenerator:
     def getSaleData(self,data):
         features = []
@@ -15,6 +17,8 @@ class MyGenerator:
         skuid = data[1]
         bandid = data[2]
         cateid = data[6]
+        skuname = data[22]
+        print skuname
         id_features.append(poiid)
         id_features.append(skuid)
         id_features.append(cateid) 
@@ -144,6 +148,7 @@ for step in range(1500):
     #skuid= sess.run(tf.reshape( tf.transpose(id_trans[1]), [batch_size,1] ))
     #cateid= sess.run(tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] ))
     # train and net output
+    #_ = sess.run([train_op],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
     _, l, pred,poiemb,skuemb,cateemb = sess.run([train_op, loss, output,poiid_embedding,sku_embedding,cate_embedding],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
     if step % 10 == 0:
         print('loss is: ' + str(l))
