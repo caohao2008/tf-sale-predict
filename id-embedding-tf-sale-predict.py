@@ -8,6 +8,7 @@ def builddict(filename):
     wd = {}
     #id to word dict
     dw = {}
+    wc = {}
     id = 0
     for line in open(filename):
         line = line.strip()
@@ -23,8 +24,12 @@ def builddict(filename):
                     id = id+1
                     wd[w]=id
                     dw[id]=w
+                    wc[w]=1
                     #print str(id), w.encode('utf-8')
+                wc[w]=wc[w]+1
     #print wd
+    for w in wc:
+        print str(wc[w])+"\t"+w.encode('utf-8')+"\tWC"
     return wd,dw
 
 w2iddict,id2wdict = builddict("data/train.data.txt")
@@ -162,8 +167,8 @@ wordid_embed_avg = tf.reduce_max(wordid_embed_s,axis=1)
 # use word embedding only
 # neural network layers
 l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb_layer')
-l3 = tf.layers.dense(l1, 10,name='l3_dense')
-output = tf.layers.dense(l3, 1, name='output')                     # output layer
+#l3 = tf.layers.dense(l1, 10,name='l3_dense')
+output = tf.layers.dense(l1, 1, name='output')                     # output layer
 
 '''
 # use poiid, skuid, catid, wordid embedding only
@@ -185,8 +190,8 @@ l2_emb3 = tf.concat([l1, l2_emb2],-1,name='l2_emb3')
 l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
 '''
-loss = tf.losses.mean_squared_error(tf_y, tf.reshape(output,[-1,1]) )   # compute cost
-#loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
+#loss = tf.losses.mean_squared_error(tf_y, tf.reshape(output,[-1,1]) )   # compute cost
+loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
 
 #loss = tf.reduce_mean(tf.where(
 #        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
