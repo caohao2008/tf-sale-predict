@@ -153,13 +153,13 @@ wordid_xs = tf.placeholder(tf.int64,[None,None,1],name='word_xs')
 poi_embed = tf.nn.embedding_lookup(poiid_embedding, poiid_x, name='poi_emb'); 
 sku_embed = tf.nn.embedding_lookup(sku_embedding, skuid_x, name='sku_emb');
 cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x,name='cate_emb');
-wordid_embed = tf.nn.embedding_lookup(cate_embedding, wordid_x,name='word_emb');
-wordid_embed_s = tf.nn.embedding_lookup(cate_embedding, wordid_xs,name='word_emb');
+wordid_embed = tf.nn.embedding_lookup(word_embedding, wordid_x,name='word_emb');
+wordid_embed_s = tf.nn.embedding_lookup(word_embedding, wordid_xs,name='word_emb_s');
 wordid_embed_avg = tf.reduce_mean(wordid_embed_s,axis=1)
 
 # use word embedding only
 # neural network layers
-l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb')
+l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb_layer')
 #l3 = tf.layers.dense(l1, 10,name='l3_dense')
 output = tf.layers.dense(l1, 1, name='output')                     # output layer
 
@@ -211,7 +211,7 @@ for step in range(1500):
     #cateid= sess.run(tf.reshape( tf.transpose(id_trans[2]), [batch_size,1] ))
     # train and net output
     #_ = sess.run([train_op],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid})
-    _, l, pred,poiemb,skuemb,cateemb,wordembavg = sess.run([train_op, loss, output,poiid_embedding,sku_embedding,cate_embedding,wordid_embed_avg],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid,wordid_xs:nameids})
+    _, l, pred,poiemb,skuemb,cateemb,wordembavg,wordemb = sess.run([train_op, loss, output,poiid_embedding,sku_embedding,cate_embedding,wordid_embed_avg,word_embedding],{tf_x:x,tf_y:y,poiid_x:poiid,skuid_x:skuid,cateid_x:cateid,wordid_xs:nameids})
     #print wordembavg
     if step % 10 == 0:
         print('loss is: ' + str(l))
@@ -233,6 +233,13 @@ for step in range(1500):
            if(abs(cateemb[k][0])>1e-5):
                outstr = str(k)+"\t"+str(cateemb[k])
                f.write(outstr+"\n")
+
+        f=open('word_embedding.txt','w+')
+        for k in range(1,len(w2iddict)):
+           if(abs(wordemb[k][0])>1e-5):
+               outstr = id2wdict[k]+"\t"+str(k)+"\t"+str(wordemb[k])
+               f.write(outstr.encode('UTF-8')+"\n")
+
 
         eval_id_x,test_x,test_y,test_nameid_x = eval_data_gen.get_next(0)
         id_trans = tf.transpose(eval_id_x)
