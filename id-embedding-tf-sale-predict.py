@@ -157,7 +157,14 @@ wordid_embed = tf.nn.embedding_lookup(cate_embedding, wordid_x,name='word_emb');
 wordid_embed_s = tf.nn.embedding_lookup(cate_embedding, wordid_xs,name='word_emb');
 wordid_embed_avg = tf.reduce_mean(wordid_embed_s,axis=1)
 
+# use word embedding only
+# neural network layers
+l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb')
+#l3 = tf.layers.dense(l1, 10,name='l3_dense')
+output = tf.layers.dense(l1, 1, name='output')                     # output layer
 
+'''
+# use poiid, skuid, catid, wordid embedding only
 # neural network layers
 l2_emb1 = tf.concat([poi_embed, sku_embed],-1,name='l2_emb1')
 l2_emb2 = tf.concat([l2_emb1, cate_embed],-1,name='l2_emb2')
@@ -165,7 +172,7 @@ l2_emb21 = tf.concat([l2_emb2, wordid_embed_avg],-1,name='l2_emb2')
 l2_emb3 = tf.reshape(l2_emb21,[-1,13],name='l2_emb2_new')
 l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
-
+'''
 
 '''
 l1 = tf.layers.dense(tf_x, 20,name="l1_hidden")          # hidden layer
