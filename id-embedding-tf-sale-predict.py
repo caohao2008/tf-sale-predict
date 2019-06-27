@@ -145,7 +145,6 @@ cateid_x = tf.placeholder(tf.int64,[None,1],name='cate_x')
 wordtotalLength = len(w2iddict)+1
 word_embedding_size = 4
 word_embedding = tf.Variable(tf.random_uniform([wordtotalLength, word_embedding_size],-1.0,1.0))
-cate_embedding = tf.Variable(tf.zeros([wordtotalLength, word_embedding_size]))
 wordid_x = tf.placeholder(tf.int64,[None,1],name='word_x')
 wordid_xs = tf.placeholder(tf.int64,[None,None,1],name='word_xs')
 
