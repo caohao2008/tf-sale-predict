@@ -140,19 +140,20 @@ poiid_x = tf.placeholder(tf.int64,[None,1])
 
 skutotalLength = 60000
 sku_embedding_size = 3
-sku_embedding = tf.Variable(tf.random_uniform([skutotalLength, sku_embedding_size],-1.0,1.0))
+#sku_embedding = tf.Variable(tf.random_uniform([skutotalLength, sku_embedding_size],-1.0,1.0))
 sku_embedding = tf.Variable(tf.zeros([skutotalLength, sku_embedding_size]))
 skuid_x = tf.placeholder(tf.int64,[None,1])
 
 catetotalLength = 5000
 cate_embedding_size = 3
-cate_embedding = tf.Variable(tf.random_uniform([catetotalLength, cate_embedding_size],-1.0,1.0))
+#cate_embedding = tf.Variable(tf.random_uniform([catetotalLength, cate_embedding_size],-1.0,1.0))
 cate_embedding = tf.Variable(tf.zeros([catetotalLength, cate_embedding_size]))
 cateid_x = tf.placeholder(tf.int64,[None,1],name='cate_x')
 
 wordtotalLength = len(w2iddict)+1
 word_embedding_size = 4
 word_embedding = tf.Variable(tf.random_uniform([wordtotalLength, word_embedding_size],-1.0,1.0))
+#word_embedding = tf.Variable(tf.zeros([wordtotalLength, word_embedding_size]))
 wordid_x = tf.placeholder(tf.int64,[None,1],name='word_x')
 wordid_xs = tf.placeholder(tf.int64,[None,None,1],name='word_xs')
 
@@ -160,26 +161,27 @@ wordid_xs = tf.placeholder(tf.int64,[None,None,1],name='word_xs')
 poi_embed = tf.nn.embedding_lookup(poiid_embedding, poiid_x, name='poi_emb'); 
 sku_embed = tf.nn.embedding_lookup(sku_embedding, skuid_x, name='sku_emb');
 cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x,name='cate_emb');
-wordid_embed = tf.nn.embedding_lookup(word_embedding, wordid_x,name='word_emb');
+#wordid_embed = tf.nn.embedding_lookup(word_embedding, wordid_x,name='word_emb');
 wordid_embed_s = tf.nn.embedding_lookup(word_embedding, wordid_xs,name='word_emb_s');
 wordid_embed_avg = tf.reduce_max(wordid_embed_s,axis=1)
 
+'''
 # use word embedding only
 # neural network layers
 l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb_layer')
 #l3 = tf.layers.dense(l1, 10,name='l3_dense')
 output = tf.layers.dense(l1, 1, name='output')                     # output layer
-
 '''
+
 # use poiid, skuid, catid, wordid embedding only
 # neural network layers
 l2_emb1 = tf.concat([poi_embed, sku_embed],-1,name='l2_emb1')
 l2_emb2 = tf.concat([l2_emb1, cate_embed],-1,name='l2_emb2')
-l2_emb21 = tf.concat([l2_emb2, wordid_embed_avg],-1,name='l2_emb2')
-l2_emb3 = tf.reshape(l2_emb21,[-1,13],name='l2_emb2_new')
-l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
+l2_emb3 = tf.concat([l2_emb2, wordid_embed_avg],-1,name='l2_emb3')
+l2_emb4 = tf.reshape(l2_emb3,[-1,12],name='l2_emb4')
+l3 = tf.layers.dense(l2_emb4, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
-'''
+
 
 '''
 l1 = tf.layers.dense(tf_x, 20,name="l1_hidden")          # hidden layer
