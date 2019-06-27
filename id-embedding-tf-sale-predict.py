@@ -148,7 +148,6 @@ cateid_x = tf.placeholder(tf.int64,[None,1],name='cate_x')
 wordtotalLength = len(w2iddict)+1
 word_embedding_size = 4
 word_embedding = tf.Variable(tf.random_uniform([wordtotalLength, word_embedding_size],-1.0,1.0))
-cate_embedding = tf.Variable(tf.zeros([wordtotalLength, word_embedding_size]))
 wordid_x = tf.placeholder(tf.int64,[None,1],name='word_x')
 wordid_xs = tf.placeholder(tf.int64,[None,None,1],name='word_xs')
 
@@ -158,13 +157,13 @@ sku_embed = tf.nn.embedding_lookup(sku_embedding, skuid_x, name='sku_emb');
 cate_embed = tf.nn.embedding_lookup(cate_embedding, cateid_x,name='cate_emb');
 wordid_embed = tf.nn.embedding_lookup(word_embedding, wordid_x,name='word_emb');
 wordid_embed_s = tf.nn.embedding_lookup(word_embedding, wordid_xs,name='word_emb_s');
-wordid_embed_avg = tf.reduce_mean(wordid_embed_s,axis=1)
+wordid_embed_avg = tf.reduce_max(wordid_embed_s,axis=1)
 
 # use word embedding only
 # neural network layers
 l1 = tf.layers.dense(wordid_embed_avg,6,name='word_emb_layer')
-#l3 = tf.layers.dense(l1, 10,name='l3_dense')
-output = tf.layers.dense(l1, 1, name='output')                     # output layer
+l3 = tf.layers.dense(l1, 10,name='l3_dense')
+output = tf.layers.dense(l3, 1, name='output')                     # output layer
 
 '''
 # use poiid, skuid, catid, wordid embedding only
@@ -186,8 +185,8 @@ l2_emb3 = tf.concat([l1, l2_emb2],-1,name='l2_emb3')
 l3 = tf.layers.dense(l2_emb3, 10,name='l3_dense')
 output = tf.layers.dense(l3, 1, name='output')                     # output layer
 '''
-#loss = tf.losses.mean_squared_error(tf_y, output)   # compute cost
-loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
+loss = tf.losses.mean_squared_error(tf_y, tf.reshape(output,[-1,1]) )   # compute cost
+#loss = tf.reduce_mean(tf.abs(tf_y-output) )   # compute cost
 
 #loss = tf.reduce_mean(tf.where(
 #        tf.greater(output,tf_y), (output-tf_y), (tf_y-output)*2
