@@ -29,7 +29,10 @@ def builddict(filename):
 
 w2iddict,id2wdict = builddict("data/train.data.txt")
 
+
+
 max_id_len=20
+#fill word id size up to 20, name have multi words, words length is different, tensor can not handle varable length array(only fix size array),so fill them to fix size
 def fill(ids):
     if(len(ids)>max_id_len):
         return ids[0:max_id_len]
